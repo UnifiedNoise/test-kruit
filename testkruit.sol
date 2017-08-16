@@ -16,7 +16,7 @@ contract owned {
     }
 
     modifier onlyOwner {
-        if (msg.sender != owner) throw;
+        if (msg.sender != owner) revert();
         _;
     }
 
@@ -66,8 +66,8 @@ contract token {
 
     /* Send kru */
     function transfer(address _to, uint256 _value) {
-        if (balanceOf[msg.sender] < _value) throw;           // does sender have the kru
-        if (balanceOf[_to] + _value < balanceOf[_to]) throw; // overflow protect
+        if (balanceOf[msg.sender] < _value) revert();           // does sender have the kru
+        if (balanceOf[_to] + _value < balanceOf[_to]) revert(); // overflow protect
         //TODO: check if unnamed function call as callback can be injected as in backtrack implementation
         balanceOf[msg.sender] -= _value;                     // Subtract from sender
         balanceOf[_to] += _value;                            // Add to recipient
@@ -97,10 +97,10 @@ contract token {
 
     /* A contract attempts to get the coins */
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-        if (balanceOf[_from] < _value) throw;                 // does sender have the kru
-        if (balanceOf[_to] + _value < balanceOf[_to]) throw;  // overflow protect
+        if (balanceOf[_from] < _value) revert();                 // does sender have the kru
+        if (balanceOf[_to] + _value < balanceOf[_to]) revert();  // overflow protect
         //TODO: check if unnamed function call as callback can be injected as in backtrack implementation
-        if (_value > allowance[_from][msg.sender]) throw;     // Check allowance
+        if (_value > allowance[_from][msg.sender]) revert();     // Check allowance
         balanceOf[_from] -= _value;                           // Subtract value from sender
         balanceOf[_to] += _value;                             // Add to recipient
         allowance[_from][msg.sender] -= _value;               /* sender pays gas  (should we
@@ -111,7 +111,7 @@ contract token {
 
     /* This unnamed function is called whenever someone tries to send ether to it */
     function () {
-        throw;     // Prevents accidental sending of ether
+        revert();     // Prevents accidental sending of ether
     }
 }
 
@@ -144,13 +144,13 @@ contract TestKruToken is owned, token {
 
     /* Send kru */
     function transfer(address _to, uint256 _value) {
-        if (balanceOf[msg.sender] < _value) throw;           // Check if the sender has enough
-        if (balanceOf[_to] + _value < balanceOf[_to]) throw; // Check for overflows
+        if (balanceOf[msg.sender] < _value) revert();           // Check if the sender has enough
+        if (balanceOf[_to] + _value < balanceOf[_to]) revert(); // Check for overflows
         /*TODO: check if unnamed function call as callback can be injected as in backtrack implementation
          (this fix, if needed, should be put into the originating object but I want to note it anyway)*/
 
-        if (frozenAccount[msg.sender]) throw;                // Check if frozen
-        //if (!approvedAccount[msg.sender]) throw;            //disabled: whitelisting
+        if (frozenAccount[msg.sender]) revert();                // Check if frozen
+        //if (!approvedAccount[msg.sender]) revert();            //disabled: whitelisting
 
         balanceOf[msg.sender] -= _value;                     // Subtract from the sender
         balanceOf[_to] += _value;                            // Add the same to the recipient
@@ -192,10 +192,10 @@ contract TestKruToken is owned, token {
 
     /* A contract attempts to get the kru */
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-        if (frozenAccount[_from]) throw;                       // Check if frozen
-        if (balanceOf[_from] < _value) throw;                  // Check if the sender has enough
-        if (balanceOf[_to] + _value < balanceOf[_to]) throw;  // Check for overflows
-        if (_value > allowance[_from][msg.sender]) throw;     // Check allowance
+        if (frozenAccount[_from]) revert();                       // Check if frozen
+        if (balanceOf[_from] < _value) revert();                  // Check if the sender has enough
+        if (balanceOf[_to] + _value < balanceOf[_to]) revert();  // Check for overflows
+        if (_value > allowance[_from][msg.sender]) revert();     // Check allowance
         balanceOf[_from] -= _value;                           // Subtract from sender
         balanceOf[_to] += _value;                             // Add to recipient
         allowance[_from][msg.sender] -= _value;               /* sender pays gas  (should we be
@@ -240,18 +240,18 @@ contract TestKruToken is owned, token {
     /* cash out ... well, 'eth' out */
     function buy() payable {
         uint amount = msg.value / buyPrice;                // calculates the amount
-        if (balanceOf[this] < amount) throw;               // checks if it has enough to sell
+        if (balanceOf[this] < amount) revert();               // checks if it has enough to sell
         balanceOf[msg.sender] += amount;                   // adds the amount to buyer's balance
         balanceOf[this] -= amount;                         // subtracts amount from seller's balance
         Transfer(this, msg.sender, amount);                // execute an event reflecting the change
     }
 
     function sell(uint256 amount) {
-        if (balanceOf[msg.sender] < amount ) throw;        // checks if the sender has enough to sell
+        if (balanceOf[msg.sender] < amount ) revert();        // checks if the sender has enough to sell
         balanceOf[this] += amount;                         // adds the amount to owner's balance
         balanceOf[msg.sender] -= amount;                   // subtracts the amount from seller's balance
         if (!msg.sender.send(amount * sellPrice)) {        // sends ether to the seller. It's important
-            throw;                                         // to do this last to avoid recursion attacks
+            revert();                                         // to do this last to avoid recursion attacks
         } else {
             Transfer(msg.sender, this, amount);            // executes an event reflecting the change
         }
@@ -266,10 +266,10 @@ contract TestKruToken is owned, token {
 
     function proofOfWork(uint nonce){
         bytes8 n = bytes8(sha3(nonce, currentChallenge));    // Generate a random hash based on input
-        if (n < bytes8(difficulty)) throw;                   // Check if it's under the difficulty
+        if (n < bytes8(difficulty)) revert();                   // Check if it's under the difficulty
 
         uint timeSinceLastProof = (now - timeOfLastProof);  // Calculate time since last reward was given
-        if (timeSinceLastProof <  5 seconds) throw;         // Rewards cannot be given too quickly
+        if (timeSinceLastProof <  5 seconds) revert();         // Rewards cannot be given too quickly
         balanceOf[msg.sender] += timeSinceLastProof / 60 seconds;  // The reward to the winner grows by the minute
 
         difficulty = difficulty * 10 minutes / timeSinceLastProof + 1;  // Adjusts the difficulty
