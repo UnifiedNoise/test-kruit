@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 /*
 Defines ownership of CONTRACT, this should not need to change, but should be ABLE to
@@ -10,9 +10,9 @@ contract owned {
     function owned() {
 
         //for allowing anyone with contract to modify build parameters, values and send down the line.  For now, we'll keep it centralized (toggle for testing later)
-        //owner = msg.sender;
+        owner = msg.sender;
         //for now, setting this to test account mainbase to disable transferownership (but wanted to include this construct)
-        owner = 0xd21215F1b924983944a7211Cb35BF84737FF04bc ;
+        //owner = 0xd21215F1b924983944a7211Cb35BF84737FF04bc ;
     }
 
     modifier onlyOwner {
@@ -104,7 +104,8 @@ contract token {
         balanceOf[_from] -= _value;                           // Subtract value from sender
         balanceOf[_to] += _value;                             // Add to recipient
         allowance[_from][msg.sender] -= _value;               /* sender pays gas  (should we
-                                                                TODO: include this in the allowance check?) */
+                                                                TODO: include this in the allowance check?)
+                                                                */
         Transfer(_from, _to, _value);                         // execute
         return true;
     }
@@ -119,7 +120,7 @@ contract token {
 
 /*
 
-Wrap in advanced management layer
+token advanced management
 
 */
 contract TestKruToken is owned, token {
@@ -127,6 +128,9 @@ contract TestKruToken is owned, token {
     //if we want to modify kru external value for sale
     uint256 public sellPrice;
     uint256 public buyPrice;
+
+    //ensure no one drops below this amount of ether to back transactions
+    uint minBalanceForAccounts = 5;
 
     //map a frozen state for any account with Kru - ability to freeze funds / account
     mapping (address => bool) public frozenAccount;
@@ -139,8 +143,10 @@ contract TestKruToken is owned, token {
     uint256 initialSupply,
     string tokenName,
     uint8 decimalUnits,
-    string tokenSymbol
-    ) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {}
+    string tokenSymbol,
+    uint minBalance) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {
+        setMinBalance(minBalance);
+    }
 
     /* Send kru */
     function transfer(address _to, uint256 _value) {
@@ -184,8 +190,6 @@ contract TestKruToken is owned, token {
      always have enough eth to give / trade them away
     */
 
-    uint minBalanceForAccounts;
-
     function setMinBalance(uint minimumBalanceInFinney) onlyOwner {
         minBalanceForAccounts = minimumBalanceInFinney * 1 finney;
     }
@@ -222,7 +226,9 @@ contract TestKruToken is owned, token {
     }
 
 
-    /*  disabled: this function could be used to replace the implementation of freezing, if we used instead
+    /*  disabled:
+
+        this function could be used to replace the implementation of freezing, if we used instead
         a 'moderated' user approach, where all users were NOT allowed to use the network by default
         until they were explicitly 'allowed' via a whitelist... for now, it is disabled
         function freezeAccount(address target, bool freeze) onlyOwner {
@@ -258,7 +264,9 @@ contract TestKruToken is owned, token {
     }
 
 
-    /* basic kru hashing 'Proof of Work' mining capability  */
+    /*
+    Disabled:
+    basic kru hashing 'Proof of Work' mining capability
 
     bytes32 public currentChallenge;                         // The initial kru challenge
     uint public timeOfLastProof;                             // Variable to keep track of when rewards were given
@@ -273,14 +281,25 @@ contract TestKruToken is owned, token {
         balanceOf[msg.sender] += timeSinceLastProof / 60 seconds;  // The reward to the winner grows by the minute
 
         difficulty = difficulty * 10 minutes / timeSinceLastProof + 1;  // Adjusts the difficulty
-        /*( This is kept to a very low difficulty level by resetting the timeofproof to 'now' in the token constructor )*/
+        /*( This is kept to a very low difficulty level by resetting the timeofproof to 'now' in the token constructor )*//*
 
         timeOfLastProof = now;                              // Reset the counter
         currentChallenge = sha3(nonce, currentChallenge, block.blockhash(block.number-1));  // Save a hash that will be used as the next proof
     }
 
+    End Disabled
+    */
+
+ }
 
 
 
+/*
+ONCE rendered - the address and interface will be placed in these comments for full review
 
-}
+JSON Interface:
+[ { "constant": false, "inputs": [ { "name": "newSellPrice", "type": "uint256" }, { "name": "newBuyPrice", "type": "uint256" } ], "name": "setPrices", "outputs": [], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "name", "outputs": [ { "name": "", "type": "string", "value": "TestKru" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "approve", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "totalSupply", "outputs": [ { "name": "", "type": "uint256", "value": "10000" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "_from", "type": "address" }, { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transferFrom", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "decimals", "outputs": [ { "name": "", "type": "uint8", "value": "4" } ], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "sellPrice", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "standard", "outputs": [ { "name": "", "type": "string", "value": "Token 0.1" } ], "payable": false, "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "address" } ], "name": "balanceOf", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "target", "type": "address" }, { "name": "mintedAmount", "type": "uint256" } ], "name": "mintToken", "outputs": [], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "buyPrice", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "owner", "outputs": [ { "name": "", "type": "address", "value": "0xd21215f1b924983944a7211cb35bf84737ff04bc" } ], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "symbol", "outputs": [ { "name": "", "type": "string", "value": "%" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [], "name": "buy", "outputs": [], "payable": true, "type": "function" }, { "constant": false, "inputs": [ { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transfer", "outputs": [], "payable": false, "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "address" } ], "name": "frozenAccount", "outputs": [ { "name": "", "type": "bool", "value": false } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "minimumBalanceInFinney", "type": "uint256" } ], "name": "setMinBalance", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }, { "name": "_extraData", "type": "bytes" } ], "name": "approveAndCall", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "address" }, { "name": "", "type": "address" } ], "name": "allowance", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "amount", "type": "uint256" } ], "name": "sell", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "target", "type": "address" }, { "name": "freeze", "type": "bool" } ], "name": "freezeAccount", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "payable": false, "type": "function" }, { "inputs": [ { "name": "initialSupply", "type": "uint256", "index": 0, "typeShort": "uint", "bits": "256", "displayName": "initial Supply", "template": "elements_input_uint", "value": "10000" }, { "name": "tokenName", "type": "string", "index": 1, "typeShort": "string", "bits": "", "displayName": "token Name", "template": "elements_input_string", "value": "TestKru" }, { "name": "decimalUnits", "type": "uint8", "index": 2, "typeShort": "uint", "bits": "8", "displayName": "decimal Units", "template": "elements_input_uint", "value": "4" }, { "name": "tokenSymbol", "type": "string", "index": 3, "typeShort": "string", "bits": "", "displayName": "token Symbol", "template": "elements_input_string", "value": "%" }, { "name": "minBalance", "type": "uint256", "index": 4, "typeShort": "uint", "bits": "256", "displayName": "min Balance", "template": "elements_input_uint", "value": "5" } ], "payable": false, "type": "constructor" }, { "payable": false, "type": "fallback" }, { "anonymous": false, "inputs": [ { "indexed": false, "name": "target", "type": "address" }, { "indexed": false, "name": "frozen", "type": "bool" } ], "name": "FrozenFunds", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "from", "type": "address" }, { "indexed": true, "name": "to", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Transfer", "type": "event" } ]
+
+Address:
+0x7AeA7E4feB6117E026195D281a82Af5B33c01326
+*/
