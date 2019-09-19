@@ -27,7 +27,7 @@ contract tokenRecipient { function receiveApproval(address _from, uint256 _value
 
 contract token {
     /* Public variables of the token */
-    string public standard = 'Token 0.9';	//full launch of test-kruit token.  launch of kruit prod token at 1.0
+    string public standard = 'Token 0.91';	//final launch of test-kruit token.  launch of kruit prod token at 1.0
     string public name = 'test-kruit';		//Test Token = test-kruit  Prod Token = kruit  (both functional ERC20)
     string public symbol;					//tkru / kru
     uint8 public decimals;
@@ -47,7 +47,7 @@ contract token {
     uint8 decimalUnits,
     string tokenSymbol
     ) {
-        balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
+        balanceOf[msg.sender] = initialSupply;              // Give creator all initial tokens
         totalSupply = initialSupply;                        // Update total supply
         name = tokenName;                                   // Set the display name
         symbol = tokenSymbol;                               // Set the display symbol 
@@ -63,15 +63,14 @@ contract token {
         Transfer(msg.sender, _to, _value);                   // Notify anyone listening that this transfer took place
     }
 
-    /* Allow another contract to spend some tokens in your behalf */
+    /* Allow another contract to spend some tokens on your behalf */
     function approve(address _spender, uint256 _value)
     returns (bool success) {
         allowance[msg.sender][_spender] = _value;
         return true;
     }
 
-    /* Approve and then communicate the approved contract in a single tx 
-       - considerable cycle reduction***  */
+    /* Approve and then communicate the approved contract in a single tx ***  */
     function approveAndCall(address _spender, uint256 _value, bytes _extraData)
     returns (bool success) {
         tokenRecipient spender = tokenRecipient(_spender);
