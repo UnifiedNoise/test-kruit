@@ -27,7 +27,7 @@ contract tokenRecipient { function receiveApproval(address _from, uint256 _value
 
 contract token {
     /* Public variables of the token */
-    string public standard = 'Token 0.8';	//full launch of test-kruit token.  launch of kruit prod token at 1.0
+    string public standard = 'Token 0.9';	//full launch of test-kruit token.  launch of kruit prod token at 1.0
     string public name = 'test-kruit';		//Test Token = test-kruit  Prod Token = kruit  (both functional ERC20)
     string public symbol;					//tkru / kru
     uint8 public decimals;
