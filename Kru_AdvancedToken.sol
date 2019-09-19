@@ -8,8 +8,8 @@ contract owned {
 
     //for allowing anyone with contract to modify build parameters, values and send down the line.  For now, we'll keep it centralized (toggle for testing later)
         //owner = msg.sender;
-    //for now, setting this to test account mainbase
-        owner = 0xd21215F1b924983944a7211Cb35BF84737FF04bc ;
+    //live account
+        owner = 0xd21715F1b924323944a7211Cb35BF81227FF04aa ;
     }
 
     modifier onlyOwner {
@@ -22,14 +22,14 @@ contract owned {
     }
 }
 
-/* she who gets (test)kruited */
+/* she who gets kru(ited) */
 contract tokenRecipient { function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData); }
 
 contract token {
     /* Public variables of the token */
-    string public standard = 'Token 0.9';	//full launch of test-kruit token.  launch of kruit prod token at 1.0
-    string public name = 'test-kruit';		//Test Token = test-kruit  Prod Token = kruit  (both functional ERC20)
-    string public symbol;					//tkru / kru
+    string public standard = 'Token 1.0';	//final launch of test-kruit token.  launch of kruit prod token at 1.0
+    string public name = 'kruit';		//Test Token = test-kruit  Prod Token = kruit  (both functional ERC20)
+    string public symbol;					//kru
     uint8 public decimals;
     uint256 public totalSupply;
 
@@ -47,7 +47,7 @@ contract token {
     uint8 decimalUnits,
     string tokenSymbol
     ) {
-        balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
+        balanceOf[msg.sender] = initialSupply;              // Give creator all initial tokens
         totalSupply = initialSupply;                        // Update total supply
         name = tokenName;                                   // Set the display name
         symbol = tokenSymbol;                               // Set the display symbol 
@@ -63,15 +63,14 @@ contract token {
         Transfer(msg.sender, _to, _value);                   // Notify anyone listening that this transfer took place
     }
 
-    /* Allow another contract to spend some tokens in your behalf */
+    /* Allow another contract to spend some tokens on your behalf */
     function approve(address _spender, uint256 _value)
     returns (bool success) {
         allowance[msg.sender][_spender] = _value;
         return true;
     }
 
-    /* Approve and then communicate the approved contract in a single tx 
-       - considerable cycle reduction***  */
+    /* Approve and then communicate the approved contract in a single tx ***  */
     function approveAndCall(address _spender, uint256 _value, bytes _extraData)
     returns (bool success) {
         tokenRecipient spender = tokenRecipient(_spender);
